@@ -70,8 +70,28 @@ JMComic3-APK-Clean/
 │   ├── test_bundle.cjs         # 打包前语法检查辅助脚本
 │   ├── test_mod_apk.py         # 补丁回归断言测试
 │   └── mod_apk.py              # 全自动解包、修补、重打包与签名引擎
+├── skills/
+│   └── jmcomic-apk-mod/
+│       └── SKILL.md            # 原作者逆向知识库 + v2.1.9 进阶 Lessons
 └── README.md
 ```
+
+---
+
+## 🛠️ AI 逆向技能与规范 (AI Skill)
+
+本项目在 [`skills/jmcomic-apk-mod/SKILL.md`](skills/jmcomic-apk-mod/SKILL.md) 中完整保留了原作者 @Tom6814 的 Webpack 结构逆向体系，并深度扩充了本次 v2.1.9 适配沉淀出的 **8 项实战 Lessons 与排雷指南**：
+
+1. **Module 8038 全局短路**：相比逐个 chunk 抹除 JSX，直接将中央渲染器短路为 `()=>null`，一网打尽全部新增页面广告位且零网络请求。
+2. **first_links 全量检索**：文字链接从旧版 8 处激增至 15 处，必须使用模式匹配全量清空。
+3. **弹窗解构对象返回**：适配新版 `{items: E}` 语法，将弹窗置空返回修正为 `{items: []}`。
+4. **开屏 onNext 状态机保护**：确保跳过闪屏广告的同时，立即触发 `onNext()`，平滑过渡至年龄确认及后续主流程。
+5. **打包前 `node --check` 语法扫描**：杜绝混淆代码微调导致的 SyntaxError 坏包。
+6. **`resources.arsc` 存储格式 STORED 铁律**：避免 Android 资源编译解析失败报错 `-2`。
+7. **Uber APK Signer 免环境支持**：摆脱本地 1GB+ Android SDK Build-Tools 依赖，单文件自动完成 4 字节对齐与 V1/V2 签名。
+8. **本地 Android 模拟器自动化冷启动 CI**：利用 ADB 实现自动化冷启动与 UI 树断言，构建坚实的质量防线。
+
+任何支持 Agent Skill 的 AI 工具（或开发者手动查阅）均可直接按此技能文档快速适配后续新版本。
 
 ---
 
