@@ -33,6 +33,14 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Set up Node.js for JavaScript validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Test patch regressions
+        run: python scripts/test_mod_apk.py
+
       - name: Download Upstream APK
         id: download_apk
         run: |

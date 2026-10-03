@@ -51,7 +51,7 @@ JMComic-Mod-v2.1.9/
 ### 方式一：直接安装现成成品包
 直接在设备上安装 `dist/JMComic3-v2.1.9-mod-debug.apk` 即可使用。已内嵌 Debug V1/V2 签名与 4 字节对齐，支持 Android 5.0 ~ Android 14+。
 
-### 方式二：本地一键构建（Python + Java）
+### 方式二：本地一键构建（Python + Java + Node.js）
 若需针对新版官方包重新构建：
 ```bash
 # 传入官方原版 APK 执行修补流水线
@@ -59,11 +59,29 @@ python scripts/mod_apk.py /path/to/official-2.1.9.apk
 ```
 构建产物将自动输出至 `dist/JMComic3-v2.1.9-mod-debug.apk`。
 
+打包前使用 `node --check` 检查全部 JavaScript；语法错误会终止构建。运行 `python scripts/test_mod_apk.py` 可验证数组、弹窗修补以及坏脚本拦截。
+
 ### 方式三：GitHub Actions 自动构建
 1. 将本工程推送到个人 GitHub 仓库。
 2. 进入仓库 **Actions** 标签页，选择 **Build JMComic3 Mod APK**。
 3. 点击 **Run workflow**（可输入指定版本号，默认为 2.1.9）。
 4. 运行完成后直接在 **Artifacts** 下载生成的去广告安装包。
+
+### 本地 CI
+
+先启动本机已配置的 Android 模拟器（例如 `Feiyu_CI_API36`），确认 `adb devices` 显示 `emulator-5554`，然后在项目根目录执行：
+
+```powershell
+$env:PYTHONUTF8 = '1'
+$env:PYTHONIOENCODING = 'utf-8'
+python scripts/local_ci.py
+# 其他机器请显式提供官方 APK；多个模拟器时指定 serial：
+python scripts/local_ci.py C:/Downloads/2.1.9.apk --serial emulator-5554
+```
+
+本地 CI 依次执行补丁回归、构建与全量 JS 语法检查、APK 签名/对齐验证、成品包行为测试、安装及两轮模拟器冷启动。行为测试提供非空广告数据，验证冷启动封面广告保持关闭、详情简介下方广告列表为空，并确认旧逻辑会使测试失败。关键补丁匹配不到时直接停止构建。
+
+退出码 `0` 表示通过，非 `0` 表示失败。每次运行的 UTF-8 日志、UI XML 和 `report.json` 保存在 `build_temp/local-ci/<时间>/`；成品仍位于 `dist/`。CI 只安装到指定模拟器，不清除应用数据。设备检查到年龄确认页为止，不自动确认年龄；登录、阅读器及详情页完整 UI 仍需人工验收。
 
 ---
 
@@ -71,12 +89,13 @@ python scripts/mod_apk.py /path/to/official-2.1.9.apk
 
 | 检查项 | 验证状态 | 说明 |
 | :--- | :---: | :--- |
-| **开屏直达主页** | ✅ 通过 | 闪屏数组清空，无倒计时等待 |
-| **首页顶部/浮窗广告** | ✅ 通过 | Module 8038 与 JSX 挂载均已中立化 |
-| **滚动文字链接广告** | ✅ 通过 | 15 个 chunk 的 `first_links` 数据源置空 |
-| **详情与搜索广告** | ✅ 通过 | 广告条目移除，搜索核心页面完好保留 |
-| **游戏与小电影板块** | ✅ 通过 | 前端路由与底栏 Tab 彻底剔除 |
-| **暗色模式切换** | ✅ 通过 | 主题与样式未被误伤 |
-| **漫画阅读器** | ✅ 通过 | 翻页、上下滚动与缩放逻辑保持原样 |
+| **启动页面** | ✅ 模拟器通过 | Android API 36：线路选择后跳过空广告页，显示原有年龄确认页 |
+| **JavaScript 语法** | ✅ 通过 | 62 个文件通过 `node --check`，数组与弹窗修补回归测试通过 |
+| **首页顶部/浮窗广告** | 静态检查 | Module 8038 与 JSX 挂载已修补，完整页面交互待验证 |
+| **滚动文字链接广告** | 静态检查 | `first_links` 数组表达式完整替换 |
+| **详情与搜索广告** | 待运行验证 | 已应用修补，未完成页面交互测试 |
+| **游戏与小电影板块** | 静态检查 | 已移除对应路由与导航项 |
+| **暗色模式切换** | 待运行验证 | 未完成切换测试 |
+| **漫画阅读器** | 待运行验证 | 未完成翻页、缩放测试 |
 | **APK 签名有效性** | ✅ 通过 | `uber-apk-signer` V1/V2 校验通过 |
 | **对齐检查** | ✅ 通过 | 4-byte zipalign 对齐通过 |
