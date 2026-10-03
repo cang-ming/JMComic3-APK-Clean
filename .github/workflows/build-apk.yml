@@ -1,0 +1,62 @@
+name: Build JMComic3 Mod APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      upstream_version:
+        description: '上游版本号 (例如 2.1.9)'
+        required: false
+        default: '2.1.9'
+  push:
+    branches:
+      - main
+      - master
+    paths:
+      - 'scripts/**'
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Download Upstream APK
+        id: download_apk
+        run: |
+          VERSION="${{ github.event.inputs.upstream_version || '2.1.9' }}"
+          echo "Target version: $VERSION"
+          APK_URL="https://github.com/hect0x7/JMComic-APK/releases/download/${VERSION}/${VERSION}.apk"
+          echo "Downloading from $APK_URL..."
+          curl -L -f -o "input-${VERSION}.apk" "$APK_URL"
+          echo "apk_path=input-${VERSION}.apk" >> $GITHUB_OUTPUT
+
+      - name: Ensure Uber APK Signer
+        run: |
+          mkdir -p scripts/bin
+          if [ ! -f scripts/bin/uber-apk-signer.jar ]; then
+            echo "Downloading uber-apk-signer..."
+            curl -L -f -o scripts/bin/uber-apk-signer.jar https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar
+          fi
+
+      - name: Run Reverse Mod & Package Pipeline
+        run: |
+          python scripts/mod_apk.py "${{ steps.download_apk.outputs.apk_path }}"
+
+      - name: Upload Mod APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: JMComic3-v${{ github.event.inputs.upstream_version || '2.1.9' }}-mod-debug
+          path: dist/*.apk
