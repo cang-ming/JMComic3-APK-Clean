@@ -1,8 +1,10 @@
 # JMComic3-APK-Clean (JMComic3 去广告与板块精简版)
 
+> **项目暂停维护**：我已加入 [Tom6814/JMComic3-APK-NO-Ads](https://github.com/Tom6814/JMComic3-APK-NO-Ads) 的维护，后续修复和新版本适配会优先在主线推进。本仓库保留 v2.1.9 自动修补方案与历史产物供参考；请到主线获取后续更新、报告问题或提交 PR。
+
 本项目是基于 [Tom6814/JMComic3-APK-NO-Ads](https://github.com/Tom6814/JMComic3-APK-NO-Ads) 与官方主线 [hect0x7/JMComic-APK](https://github.com/hect0x7/JMComic-APK) 进行**全新升级适配与自动化重构的衍生版本**。
 
-当前已全面对齐上游官方最新 **v2.1.9** 版本，重构了自动化修补流程，引入 Node.js JS AST 语法检查与本地 Android 模拟器自动化 CI，实现一键构建与 GitHub Actions 云端持续集成。
+本仓库的最后适配版本为 **v2.1.9**。它重构了自动化修补流程，引入 `node --check` JavaScript 语法检查与本地 Android 模拟器验证，并提供 GitHub Actions 构建。
 
 ---
 
@@ -17,16 +19,17 @@
 
 ---
 
-## 🌟 相比原版的演化与改进 (What's New)
+## 🌟 两种 v2.1.9 维护方式
 
-| 特性 | 原版 (Tom6814) | 本衍生版 (cang-ming/JMComic3-APK-Clean) |
+| 特性 | 主线 (Tom6814) | 本衍生版 (cang-ming/JMComic3-APK-Clean) |
 | :--- | :--- | :--- |
-| **基础版本** | 停留在 v2.0.30 | **全面适配官方最新 v2.1.9**（包含新版漫画库与接口） |
-| **广告拦截层** | 单点 chunk 文本匹配 | **Module 8038 全局中立化 + 15 个 chunk first_links 数组置空**，彻底杜绝漏网广告 |
-| **启动体验** | 仅清空开屏数组 | **跳过开屏广告的同时完整保留年龄确认与必要初始化交互** |
-| **工程质量保证** | 人工比对 | **集成 `node --check` 语法全量扫描 + 关键补丁唯一性断言** |
-| **CI / 自动化** | 仅云端构建模板 | **本地 Android 模拟器双轮冷启动 CI + GitHub Actions 自动构建双轨** |
-| **打包流程** | 依赖本地环境配置 | **内置跨平台 `uber-apk-signer`**，支持自动 4 字节对齐与 V1/V2 签名 |
+| **基础版本** | 主线也已更新至 v2.1.9 | 本仓库最后适配 v2.1.9 |
+| **交付源** | 提交修改后的 APK 解包文件，按两个分支打包变体 | 从官方 APK 输入，运行 Python 脚本修补并重打包 |
+| **补丁方式** | 在混淆后的 chunk 中做精确修改 | 脚本中维护 Module 8038、`first_links` 等匹配和替换规则 |
+| **验证方式** | GitHub Actions 打包和签名 | 补丁断言、`node --check`、本地模拟器检查及 GitHub Actions |
+| **签名方式** | Android SDK `zipalign`、`apksigner` | `uber-apk-signer` 自动对齐和签名 |
+
+两条路线的维护取舍和版本升级检查项见 [维护经验](docs/maintenance-notes.md)。
 
 ---
 
